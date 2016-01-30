@@ -6,6 +6,7 @@
 #include "x86.h"
 #include "proc.h"
 #include "spinlock.h"
+#include "myRand.h"
 
 struct {
   struct spinlock lock;
@@ -265,10 +266,11 @@ scheduler(void)
 
     // Loop over process table looking for process to run.
     acquire(&ptable.lock);
-    for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
+    int i;
+    for(i=0;i<NPROC;++i){
+      p=ptable.proc + myRand(NPROC);
       if(p->state != RUNNABLE)
         continue;
-
       // Switch to chosen process.  It is the process's job
       // to release ptable.lock and then reacquire it
       // before jumping back to us.
@@ -282,6 +284,7 @@ scheduler(void)
       // It should have changed its p->state before coming back.
       proc = 0;
     }
+    
     release(&ptable.lock);
 
   }
