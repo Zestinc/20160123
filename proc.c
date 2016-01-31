@@ -11,6 +11,7 @@
 struct {
   struct spinlock lock;
   struct proc proc[NPROC];
+  int totalTickets;
 } ptable;
 
 static struct proc *initproc;
@@ -48,6 +49,8 @@ allocproc(void)
 found:
   p->state = EMBRYO;
   p->pid = nextpid++;
+  p->tickets=1;
+  ptable.totalTickets++;
   release(&ptable.lock);
 
   // Allocate kernel stack.
@@ -266,23 +269,35 @@ scheduler(void)
 
     // Loop over process table looking for process to run.
     acquire(&ptable.lock);
-    int i;
-    for(i=0;i<NPROC;++i){
-      p=ptable.proc + myRand(NPROC);
-      if(p->state != RUNNABLE)
-        continue;
-      // Switch to chosen process.  It is the process's job
-      // to release ptable.lock and then reacquire it
-      // before jumping back to us.
-      proc = p;
-      switchuvm(p);
-      p->state = RUNNING;
-      swtch(&cpu->scheduler, proc->context);
-      switchkvm();
-
-      // Process is done running for now.
-      // It should have changed its p->state before coming back.
-      proc = 0;
+    if(ptable.totalTickets!=0){
+      int winner = myRand(ptable.totalTickets);
+/*
+      int i =0;
+      int j=0;
+      for(p=ptable.proc;p< &ptable.proc[NPROC];++p){
+          i+=p->tickets;
+        if(p->state==RUNNABLE)
+          j++;
+      }
+      cprintf("TotalTickets:%d TicketsPrinted:%d RunnableProcesses:%d \n",ptable.totalTickets,i,j);
+*/
+      for(p=ptable.proc;p< &ptable.proc[NPROC];++p){
+        winner-=p->tickets;
+        if(p->state != RUNNABLE||winner>=0)
+          continue;
+        // Switch to chosen process.  It is the process's job
+        // to release ptable.lock and then reacquire it
+        // before jumping back to us.
+        proc = p;
+        switchuvm(p);
+        p->state = RUNNING;
+        swtch(&cpu->scheduler, proc->context);
+        switchkvm();
+      
+        // Process is done running for now.
+        // It should have changed its p->state before coming back.
+        proc = 0;
+      }
     }
     
     release(&ptable.lock);
