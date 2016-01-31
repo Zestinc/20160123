@@ -234,6 +234,10 @@ wait(void)
         p->parent = 0;
         p->name[0] = 0;
         p->killed = 0;
+        //lottery stuff below
+        p->tickets = 0;
+        ptable.totalTickets--; 
+        //lottery stuff ends
         release(&ptable.lock);
         return pid;
       }
@@ -283,8 +287,10 @@ scheduler(void)
 */
       for(p=ptable.proc;p< &ptable.proc[NPROC];++p){
         winner-=p->tickets;
-        if(p->state != RUNNABLE||winner>=0)
+        if(winner>=0)
           continue;
+        if(p->state!=RUNNABLE)
+          break;
         // Switch to chosen process.  It is the process's job
         // to release ptable.lock and then reacquire it
         // before jumping back to us.
