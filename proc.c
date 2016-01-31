@@ -11,6 +11,8 @@
 struct {
   struct spinlock lock;
   struct proc proc[NPROC];
+  int ticketNum[NPROC];
+  int totalTickets;
 } ptable;
 
 static struct proc *initproc;
@@ -48,6 +50,10 @@ allocproc(void)
 found:
   p->state = EMBRYO;
   p->pid = nextpid++;
+  //Lottery changes here
+  ptable.ticketNum[p-ptable.proc] = 1;
+  ptable.totalTickets++;
+  //changes end here
   release(&ptable.lock);
 
   // Allocate kernel stack.
@@ -231,6 +237,10 @@ wait(void)
         p->parent = 0;
         p->name[0] = 0;
         p->killed = 0;
+	//lottery code starts here
+	ptable.ticketNum[p-ptable.proc] = 0;
+        ptable.totalTickets--;
+	//lottery code ends
         release(&ptable.lock);
         return pid;
       }
@@ -268,7 +278,14 @@ scheduler(void)
     acquire(&ptable.lock);
     int i;
     for(i=0;i<NPROC;++i){
-      p=ptable.proc + myRand(NPROC);
+      unsigned int winner = myRand(ptable.totalTickets);
+      int j=0;
+      while(winner>=0&&j<NPROC){
+        cprintf("winner = %d;ticketNum = %d\n",winner,ptable.ticketNum[j]);
+        winner-=ptable.ticketNum[j];
+        j++;
+      }
+      p=ptable.proc + j-1;
       if(p->state != RUNNABLE)
         continue;
       // Switch to chosen process.  It is the process's job
