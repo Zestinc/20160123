@@ -73,8 +73,8 @@ found:
   memset(p->context, 0, sizeof *p->context);
   p->context->eip = (uint)forkret;
 
-  int hash_id = get_processor_hash(p->pid);
-  hs[hash_id].count++;
+  // int hash_id = get_processor_hash(p->pid);
+  // hs[hash_id].count++;
 
   return p;
 }

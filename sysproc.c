@@ -91,8 +91,10 @@ sys_uptime(void)
 }
 
 int
-sys_count(int mpid)
+sys_count(void)
 {
-  cprintf("sys_count: %d\n", mpid);
-  return get_processor_count(mpid);
+  int pid;
+  if(argint(0, &pid) < 0)
+    return -1;
+  return get_processor_count(pid);
 }
