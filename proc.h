@@ -1,6 +1,8 @@
 // Segments in proc->gdt.
 #define NSEGS     7
 
+// #define MAXSYSCALLS 30
+
 // Per-CPU state
 struct cpu {
   uchar id;                    // Local APIC ID; index into cpus[] below
@@ -73,3 +75,16 @@ struct proc {
 //   original data and bss
 //   fixed-size stack
 //   expandable heap
+
+struct htable{
+  int pid;
+  int count;
+  int exist;
+};
+
+int get_processor_hash(int pid);
+int insert_new_pid(int pid);
+void erase_pid(int pid);
+int get_processor_count(int pid);
+// add num to pid.count, and return count
+int add_processor_count(int pid, int num);

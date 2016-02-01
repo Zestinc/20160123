@@ -6,11 +6,14 @@
 #include "x86.h"
 #include "proc.h"
 #include "spinlock.h"
+// #include "hash.h"
 
-struct {
+static struct htable hs[NPROC];
+
+struct{
   struct spinlock lock;
   struct proc proc[NPROC];
-} ptable;
+}ptable;
 
 static struct proc *initproc;
 
@@ -69,6 +72,9 @@ found:
   p->context = (struct context*)sp;
   memset(p->context, 0, sizeof *p->context);
   p->context->eip = (uint)forkret;
+
+  int hash_id = get_processor_hash(p->pid);
+  hs[hash_id].count++;
 
   return p;
 }
@@ -153,7 +159,9 @@ fork(void)
     if(proc->ofile[i])
       np->ofile[i] = filedup(proc->ofile[i]);
   np->cwd = idup(proc->cwd);
- 
+  
+  int hash_id = get_processor_hash(np->pid);
+  hs[hash_id].count = 0;
   pid = np->pid;
   np->state = RUNNABLE;
   safestrcpy(np->name, proc->name, sizeof(proc->name));
@@ -456,4 +464,61 @@ procdump(void)
   }
 }
 
+int
+get_processor_hash(int pid)
+{
+  int hash_id = pid % NPROC;
+  int count = NPROC;
+  while(hs[hash_id].pid != pid && count--) hash_id++;
+  if(!count){
+    cprintf("Find pid in hash table error!\n");
+    insert_new_pid(pid);
+  }
+  return hash_id;
+}
+// Insert new pid to hash_table
+int
+insert_new_pid(int pid)
+{
+  int hash_id = pid % NPROC;
+  int count = NPROC;
+  while(hs[hash_id].exist && count--) hash_id++;
+  if(!count){
+    cprintf("No empty space for process!\n");
+    return -1;
+  }
+  hs[hash_id].exist = 1;
+  hs[hash_id].count = 0;
+  return hash_id;
+}
+// Erase pid in hash_table when pid is killed.
+void
+erase_pid(int pid)
+{
+  int hash_id = get_processor_hash(pid);
+  hs[hash_id].exist = 0;
+  hs[hash_id].count = 0;
+}
 
+int
+get_processor_count(int pid){
+  int hash_id = pid % NPROC;
+  int count = NPROC;
+  while(hs[hash_id].pid != pid && count--) hash_id++;
+  if(!count){
+    cprintf("Find pid in hash table error!\n");
+    insert_new_pid(pid);
+  }
+  cprintf("hash_id:%d\n", hash_id);
+  return hs[hash_id].count;
+}
+
+int
+add_processor_count(int pid, int num)
+{
+  int hash_id = pid % NPROC;
+  int count = NPROC;
+  while(hs[hash_id].pid != pid && count--) hash_id++;
+  hs[hash_id].count += num;
+  return hs[hash_id].count;
+}
