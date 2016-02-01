@@ -82,10 +82,8 @@ struct htable{
   int exist;
 };
 
-int get_processor_hash(int pid);
-int insert_new_pid(int pid);
-void erase_pid(int pid);
-int get_processor_count(int pid);
-// add num to pid.count, and return count
-int add_processor_count(int pid, int num);
+int get_processor_hash(int);
+int insert_new_pid(int);
+int get_processor_count(int);
 void init_processor_hash_table(void);
+int add_processor_count(int ,int);

@@ -476,55 +476,37 @@ init_processor_hash_table()
 }
 
 int
-get_processor_hash(int pid)
+get_processor_hash(int x)
 {
-  int hash_id = pid % NPROC;
-  int count = NPROC;
-  while(hs[hash_id].pid != pid && count--) hash_id = (hash_id+1)%NPROC;
-  if(!count){
-    cprintf("Find pid in hash table error!\n");
-    insert_new_pid(pid);
+  if(!hs[x].exist){
+    insert_new_pid(x);
   }
-  return hash_id;
+  
+  return x;
 }
 // Insert new pid to hash_table
 int
-insert_new_pid(int pid)
+insert_new_pid(int x)
 {
-  int hash_id = pid % NPROC;
-  int count = NPROC;
-  while(hs[hash_id].exist && count--) hash_id = (hash_id+1)%NPROC;
-  if(!count){
-    cprintf("No empty space for process!\n");
-    return -1;
-  }
-  hs[hash_id].pid = pid;
-  hs[hash_id].exist = 1;
-  hs[hash_id].count = 0;
-  return hash_id;
-}
-// Erase pid in hash_table when pid is killed.
-void
-erase_pid(int pid)
-{
-  int hash_id = get_processor_hash(pid);
-  hs[hash_id].exist = 0;
-  hs[hash_id].count = 0;
+  hs[x].pid = x;
+  hs[x].exist = 1;
+  hs[x].count = 0;
+  return x;
+
 }
 
 int
-get_processor_count(int pid){
-  int hash_id = get_processor_hash(pid);
+get_processor_count(int x){
+  cprintf("input x: %d\n", x);
+  int hash_id = get_processor_hash(x);
   cprintf("hash_id:%d\n", hash_id);
   return hs[hash_id].count;
 }
 
 int
-add_processor_count(int pid, int num)
+add_processor_count(int x, int num)
 {
-  int hash_id = pid % NPROC;
-  int count = NPROC;
-  while(hs[hash_id].pid != pid && count--) hash_id = (hash_id+1)%NPROC;
-  hs[hash_id].count += num;
-  return hs[hash_id].count;
+  x = get_processor_hash(x);
+  hs[x].count += num;
+  return x;
 }
