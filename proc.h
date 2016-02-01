@@ -88,3 +88,4 @@ void erase_pid(int pid);
 int get_processor_count(int pid);
 // add num to pid.count, and return count
 int add_processor_count(int pid, int num);
+void init_processor_hash_table(void);

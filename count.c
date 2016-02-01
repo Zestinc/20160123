@@ -7,6 +7,7 @@ main(int argc, char *argv[])
 {
   int cpid = getpid();
   int arg = atoi(argv[1]);
+  printf(1, "arg = %d\n", arg);
   printf(1, "ID of current process %d\nAnd it's count:%d\n\n", arg, count(arg));
   printf(1, "ID of current process %d\nAnd it's count:%d\n\n", cpid, count(cpid));
   sleep(1);
@@ -19,5 +20,6 @@ main(int argc, char *argv[])
     sleep(2);
     printf(1, "ID of current process %d\nAnd it's count:%d\n\n", cpid, count(cpid));
   }
+  wait();
   exit();
 }
