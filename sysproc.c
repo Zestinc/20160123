@@ -88,3 +88,23 @@ sys_uptime(void)
   release(&tickslock);
   return xticks;
 }
+
+int
+sys_settickets(void){
+  int num;
+  if(argint(0, &num)<0)
+    return -1;
+  //call proc to update ticket total
+  updateTotalTickets(proc,num);
+  proc->tickets = num;
+  return 0;
+  
+}
+
+int
+sys_status(void){
+  int pid;
+  if(argint(0,&pid)<0)
+    return -1;
+  return status(pid);
+}

@@ -49,6 +49,7 @@ allocproc(void)
 found:
   p->state = EMBRYO;
   p->pid = nextpid++;
+  p->tick = 0;
   p->tickets=1;
   ptable.totalTickets++;
   release(&ptable.lock);
@@ -235,8 +236,8 @@ wait(void)
         p->name[0] = 0;
         p->killed = 0;
         //lottery stuff below
+        ptable.totalTickets-=p->tickets;
         p->tickets = 0;
-        ptable.totalTickets--; 
         //lottery stuff ends
         release(&ptable.lock);
         return pid;
@@ -284,11 +285,12 @@ scheduler(void)
           j++;
       }
       cprintf("TotalTickets:%d TicketsPrinted:%d RunnableProcesses:%d \n",ptable.totalTickets,i,j);
-*/
+*/    
       for(p=ptable.proc;p< &ptable.proc[NPROC];++p){
         winner-=p->tickets;
         if(winner>=0)
           continue;
+        p->tick++;  
         if(p->state!=RUNNABLE)
           break;
         // Switch to chosen process.  It is the process's job
@@ -303,6 +305,7 @@ scheduler(void)
         // Process is done running for now.
         // It should have changed its p->state before coming back.
         proc = 0;
+        break;
       }
     }
     
@@ -480,4 +483,24 @@ procdump(void)
   }
 }
 
+void updateTotalTickets(struct proc* p, int i){
+  ptable.totalTickets -=p->tickets;
+  ptable.totalTickets +=i;
+  cprintf("TotalTickets is now %d\n", ptable.totalTickets );
+  return;
+}
+
+int status(int i){
+  struct proc* p;
+  acquire(&ptable.lock);
+  for(p=ptable.proc;&ptable.proc[NPROC]; p++){
+    if(p->pid == i){
+      cprintf("PID:%d Tickets held:%d Scheduled:%d\n",p->pid,p->tickets,p->tick);
+      release(&ptable.lock);
+      return 0;
+    }
+  }
+  release(&ptable.lock);  
+  return -1;
+}
 
