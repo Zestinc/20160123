@@ -6,11 +6,14 @@
 #include "x86.h"
 #include "proc.h"
 #include "spinlock.h"
+// #include "hash.h"
 
-struct {
+static struct htable hs[NPROC];
+
+struct{
   struct spinlock lock;
   struct proc proc[NPROC];
-} ptable;
+}ptable;
 
 static struct proc *initproc;
 
@@ -69,6 +72,9 @@ found:
   p->context = (struct context*)sp;
   memset(p->context, 0, sizeof *p->context);
   p->context->eip = (uint)forkret;
+
+  // int hash_id = get_processor_hash(p->pid);
+  // hs[hash_id].count++;
 
   return p;
 }
@@ -153,7 +159,9 @@ fork(void)
     if(proc->ofile[i])
       np->ofile[i] = filedup(proc->ofile[i]);
   np->cwd = idup(proc->cwd);
- 
+  
+  int hash_id = get_processor_hash(np->pid);
+  hs[hash_id].count = 0;
   pid = np->pid;
   np->state = RUNNABLE;
   safestrcpy(np->name, proc->name, sizeof(proc->name));
@@ -456,4 +464,48 @@ procdump(void)
   }
 }
 
+void
+init_processor_hash_table()
+{
+  int i;
+  for(i=0; i<NPROC; i++){
+    hs[i].pid = 0;
+    hs[i].exist = 0;
+    hs[i].count = 0;
+  }
+}
 
+int
+get_processor_hash(int x)
+{
+  if(!hs[x].exist){
+    insert_new_pid(x);
+  }
+  return x;
+}
+
+// Insert new pid to hash_table
+int
+insert_new_pid(int x)
+{
+  hs[x].pid = x;
+  hs[x].exist = 1;
+  hs[x].count = 0;
+  return x;
+
+}
+
+int
+get_processor_count(int x){
+  int hash_id = get_processor_hash(x);
+  cprintf("ID of current process %d\nAnd it's count:%d\n\n", x, hs[hash_id].count);
+  return hs[hash_id].count;
+}
+
+int
+add_processor_count(int x, int num)
+{
+  x = get_processor_hash(x);
+  hs[x].count += num;
+  return x;
+}

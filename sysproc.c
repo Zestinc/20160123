@@ -5,6 +5,7 @@
 #include "memlayout.h"
 #include "mmu.h"
 #include "proc.h"
+// #include "hash.h"
 
 int
 sys_fork(void)
@@ -87,4 +88,13 @@ sys_uptime(void)
   xticks = ticks;
   release(&tickslock);
   return xticks;
+}
+
+int
+sys_count(void)
+{
+  int pid;
+  if(argint(0, &pid) < 0)
+    return -1;
+  return get_processor_count(pid);
 }
