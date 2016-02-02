@@ -170,6 +170,7 @@ UPROGS=\
 	_usertests\
 	_wc\
 	_zombie\
+	_count\
 	_test\
 	_test2\
 
