@@ -481,9 +481,9 @@ get_processor_hash(int x)
   if(!hs[x].exist){
     insert_new_pid(x);
   }
-  
   return x;
 }
+
 // Insert new pid to hash_table
 int
 insert_new_pid(int x)
@@ -497,9 +497,8 @@ insert_new_pid(int x)
 
 int
 get_processor_count(int x){
-  cprintf("input x: %d\n", x);
   int hash_id = get_processor_hash(x);
-  cprintf("hash_id:%d\n", hash_id);
+  cprintf("ID of current process %d\nAnd it's count:%d\n\n", x, hs[hash_id].count);
   return hs[hash_id].count;
 }
 
